@@ -3,7 +3,7 @@
 use Illuminate\Routing\Router;
 
 $router->group(['prefix' => 'iwhmcs/v1'], function (Router $router) {
-  //Route sync customers
+  //Route sync cients to bitrix
   $router->get('/sync-clients-bitrix24', [
     'as' => 'api.iwhmcs.sync.cients.bitrix',
     'uses' => 'WhmcsApiController@syncClientsToBitrix24',
@@ -25,6 +25,18 @@ $router->group(['prefix' => 'iwhmcs/v1'], function (Router $router) {
   $router->get('/set-client-to-invoice', [
     'as' => 'api.iwhmcs.sync.set.client.to.invoice',
     'uses' => 'WhmcsApiController@setClientToInvoice',
+    'middleware' => ['auth:api']
+  ]);
+  //Route sync cients to bitrix
+  $router->get('/sync-products-bitrix24', [
+    'as' => 'api.iwhmcs.sync.products.bitrix',
+    'uses' => 'WhmcsApiController@syncProductsToBitrix24',
+    'middleware' => ['auth:api']
+  ]);
+  //Route sync cients to bitrix
+  $router->get('/sync-invoices-bitrix24', [
+    'as' => 'api.iwhmcs.sync.invoices.bitrix',
+    'uses' => 'WhmcsApiController@syncInvoicesToBitrix24',
     'middleware' => ['auth:api']
   ]);
 });

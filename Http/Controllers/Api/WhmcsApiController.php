@@ -16,6 +16,8 @@ use Modules\Iwhmcs\Jobs\SyncClientsToBitrix24;
 use Modules\Iwhmcs\Jobs\syncProjectsAsHosting;
 use Modules\Iwhmcs\Jobs\SetGroupToClients;
 use Modules\Iwhmcs\Jobs\SetClientToInvoices;
+use Modules\Iwhmcs\Jobs\syncProductsToBitrix;
+use Modules\Iwhmcs\Jobs\syncInvoicesToBitrix;
 
 class WhmcsApiController extends BaseApiController
 {
@@ -82,6 +84,40 @@ class WhmcsApiController extends BaseApiController
       SetClientToInvoices::dispatch()->onQueue('whmcsJob');
       //Response
       $response = ['data' => 'Job was created to set client id to invoice items in WHCMS'];
+    } catch (\Exception $e) {
+      $status = $this->getStatusError($e->getCode());
+      $response = ["errors" => $e->getMessage()];
+    }
+
+    //Return response
+    return response()->json($response ?? ["data" => "Request successful"], $status ?? 200);
+  }
+
+  //Set group to clients
+  public function syncProductsToBitrix24(Request $request)
+  {
+    try {
+      //Dispatch job
+      syncProductsToBitrix::dispatch()->onQueue('whmcsJob');
+      //Response
+      $response = ['data' => 'Job was created to sync products with Bitrix24'];
+    } catch (\Exception $e) {
+      $status = $this->getStatusError($e->getCode());
+      $response = ["errors" => $e->getMessage()];
+    }
+
+    //Return response
+    return response()->json($response ?? ["data" => "Request successful"], $status ?? 200);
+  }
+
+  //Set group to clients
+  public function syncInvoicesToBitrix24(Request $request)
+  {
+    try {
+      //Dispatch job
+      syncInvoicesToBitrix::dispatch()->onQueue('whmcsJob');
+      //Response
+      $response = ['data' => 'Job was created to sync invoices as deal on Bitrix24'];
     } catch (\Exception $e) {
       $status = $this->getStatusError($e->getCode());
       $response = ["errors" => $e->getMessage()];
