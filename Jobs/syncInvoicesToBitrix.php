@@ -50,7 +50,7 @@ class syncInvoicesToBitrix implements ShouldQueue
   public function dispatchInvoicesBatch()
   {
     $numBatchs = 20;//Batchs quanitty
-    $quantityPerBatch = 1500;//Define record quantity to generate batch
+    $quantityPerBatch = 500;//Define record quantity to generate batch
 
     for ($batch = 0; $batch <= $numBatchs; $batch++) {
       //Get WHMCS clients with contactBitrixId

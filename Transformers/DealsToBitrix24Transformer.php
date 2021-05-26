@@ -15,7 +15,7 @@ class DealsToBitrix24Transformer extends JsonResource
       "CONTACT_ID" => $this->bitrixContactId,
       "OPENED" => "Y",
       "CURRENCY_ID" => "COP",
-      "BEGINDATE" => $this->datepaid,
+      "BEGINDATE" => (!$this->datepaid || ($this->datepaid == '0000-00-00 00:00:00')) ? $this->date : $this->datepaid,
       "DATA_CREATE" => $this->date,
       "ORIGIN_ID" => $this->id,
     ];
