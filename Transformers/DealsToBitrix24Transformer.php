@@ -10,14 +10,17 @@ class DealsToBitrix24Transformer extends JsonResource
   {
     return [
       "ID" => $this->bitrixId,
-      "TITLE" => $this->id . '-' . $this->clientFullName,
+      "TITLE" => "{$this->id}-{$this->dealName}",
       "STAGE_ID" => "WON",
       "CONTACT_ID" => $this->bitrixContactId,
       "OPENED" => "Y",
       "CURRENCY_ID" => "COP",
-      "BEGINDATE" => (!$this->datepaid || ($this->datepaid == '0000-00-00 00:00:00')) ? $this->date : $this->datepaid,
-      "DATA_CREATE" => $this->date,
-      "ORIGIN_ID" => $this->id,
+      "BEGINDATE" => (isset($this->firstInvoice->datepaid) && ($this->firstInvoice->datepaid != '0000-00-00 00:00:00')) ?
+        $this->firstInvoice->datepaid : $this->firstInvoice->date,
+      "CLOSEDATE" => ($this->lastInvoice->datepaid && ($this->lastInvoice->datepaid != '0000-00-00 00:00:00')) ?
+        $this->lastInvoice->datepaid : $this->lastInvoice->date,
+      "DATA_CREATE" => $this->firstInvoice->date,
+      //"ORIGIN_ID" => $this->id,
     ];
   }
 }

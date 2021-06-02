@@ -43,7 +43,7 @@ class syncProductsToBitrix implements ShouldQueue
    */
   public function handle()
   {
-    $this->syncProductGroupsToBitrix();
+    //$this->syncProductGroupsToBitrix();
     $this->syncProductsToBitrix();
   }
 
@@ -97,12 +97,16 @@ class syncProductsToBitrix implements ShouldQueue
       //Get WHMCS clients with contactBitrixId
       $products = \DB::connection('whmcs')->table('tblproducts')
         ->select(
-          'tblproducts.*',
+          'tblproducts.*', 'tblproductgroups.name as groupName',
           \DB::raw("(SELECT value FROM tblimoptions WHERE rel_id = tblproducts.id and type = '{$this->tblImOptionsTypeProducts}') as bitrixId"),
           \DB::raw("(SELECT value FROM tblimoptions WHERE rel_id = tblproducts.gid and type = '{$this->tblImOptionsTypeProductsGroup}') as productSectionBitrixId"),
           \DB::raw("(SELECT annually FROM tblpricing WHERE relid = tblproducts.id and type = 'product' and currency = 1) as copAnnuallyPrice"),
           \DB::raw("(SELECT monthly FROM tblpricing WHERE relid = tblproducts.id and type = 'product' and currency = 1) as copMonthlyPrice"),
-        )->get();
+          \DB::raw("(SELECT asetupfee FROM tblpricing WHERE relid = tblproducts.id and type = 'product' and currency = 1) as copSetupFeePrice"),
+          \DB::raw("(SELECT quarterly FROM tblpricing WHERE relid = tblproducts.id and type = 'product' and currency = 1) as copQuartelyPrice")
+        )
+        ->leftJoin('tblproductgroups', 'tblproductgroups.id', 'tblproducts.gid')
+        ->get();
 
       //Transform clients to bitrix64
       $productsBitrix = json_decode(json_encode(ProductsToBitrix24Transformer::collection($products)));

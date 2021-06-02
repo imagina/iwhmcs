@@ -17,7 +17,7 @@ use Modules\Iwhmcs\Jobs\syncProjectsAsHosting;
 use Modules\Iwhmcs\Jobs\SetGroupToClients;
 use Modules\Iwhmcs\Jobs\SetClientToInvoices;
 use Modules\Iwhmcs\Jobs\syncProductsToBitrix;
-use Modules\Iwhmcs\Jobs\syncInvoicesToBitrix;
+use Modules\Iwhmcs\Jobs\syncInvoicesByContactToBitrix;
 
 class WhmcsApiController extends BaseApiController
 {
@@ -115,7 +115,7 @@ class WhmcsApiController extends BaseApiController
   {
     try {
       //Dispatch job
-      syncInvoicesToBitrix::dispatch()->onQueue('whmcsJob');
+      syncInvoicesByContactToBitrix::dispatch()->onQueue('whmcsJob');
       //Response
       $response = ['data' => 'Job was created to sync invoices as deal on Bitrix24'];
     } catch (\Exception $e) {
