@@ -50,6 +50,7 @@ class SetClientToInvoices implements ShouldQueue
         foreach (explode(',', $project->invoiceids) as $invoiceId) {
           //Get invoices items
           $invoiceItems = \DB::connection('whmcs')->table('tblinvoiceitems')->where('invoiceid', $invoiceId)
+            ->whereNotIn('type', ['AddFunds', 'Invoice'])
             ->where(function ($q) {
               $q->whereNull('relid')->orWhere('relid', '=', '0')->orWhere('relid', '=', '');
             })->get();
@@ -91,6 +92,7 @@ class SetClientToInvoices implements ShouldQueue
         AND description NOT LIKE '%WHM%'
         AND amount >= 0
         AND tblinvoices.status='Paid'
+        AND tblinvoiceitems.type not in ('AddFunds','Invoice')
       "));
 
       //Set Hosting to invoice
@@ -129,6 +131,7 @@ class SetClientToInvoices implements ShouldQueue
         WHERE (relid is null or relid = '' or relid = 0)
         AND amount >= 0
         AND tblinvoices.status='Paid'
+        AND tblinvoiceitems.type not in ('AddFunds','Invoice')
       "));
 
       //Set Hosting to invoice
