@@ -12,10 +12,11 @@ class ProductsToBitrix24Transformer extends JsonResource
     $columnPriceByGroup = [
       23 => 'copSetupFeePrice',//Paginas WEB
       36 => 'copQuartelyPrice',//Admin. contenido
-      21 => 'copQuartelyPrice',//Comunity manager
+      21 => 'copMonthlyPrice',//Comunity manager
       34 => 'copSetupFeePrice',//Tiendas virtuales
-      22 => 'copQuartelyPrice',//Posicionamiento natural
+      22 => 'copMonthlyPrice',//Posicionamiento natural
       37 => 'copMonthlyPrice',//Marketing digital
+      40 => 'copSetupFeePrice',//Paginas web Negocios
     ];
 
     //Instance product price
