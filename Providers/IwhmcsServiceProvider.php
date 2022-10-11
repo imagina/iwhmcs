@@ -41,7 +41,7 @@ class IwhmcsServiceProvider extends ServiceProvider
   {
     $this->publishConfig('iwhmcs', 'permissions');
 
-    $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+    //$this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
     //Instance WHMCS DB connection
     \Config::set("database.connections.whmcs", [
