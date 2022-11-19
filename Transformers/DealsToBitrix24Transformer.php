@@ -11,7 +11,7 @@ class DealsToBitrix24Transformer extends JsonResource
     return [
       "ID" => $this->bitrixId,
       "TITLE" => "{$this->id}-{$this->dealName}",
-      "STAGE_ID" => "WON",
+      "STAGE_ID" => "UC_2O40XC",//"WON",
       "CONTACT_ID" => $this->bitrixContactId,
       "OPENED" => "Y",
       "CURRENCY_ID" => "COP",
