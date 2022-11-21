@@ -9,7 +9,7 @@ class DealProductsToBitrix24Transformer extends JsonResource
   public function toArray($request)
   {
     return [
-      "PRODUCT_ID" => (strpos($this->type, 'Domain') !== false) ? 616/*Dominio Registrado*/ :
+      "PRODUCT_ID" => (strpos($this->type, 'Domain') !== false) ? 863/*Dominio Registrado*/ :
         ($this->bitrixProductId ?? 132/*hosting Linux Personal*/),
       "PRICE" => $this->amount,
       "QUANTITY" => 1
