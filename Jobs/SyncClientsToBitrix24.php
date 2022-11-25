@@ -47,39 +47,56 @@ class SyncClientsToBitrix24 implements ShouldQueue
   public function syncClientsToBitrix()
   {
     try {
-      //Get WHMCS clients with contactBitrixId
-      $clients = \DB::connection('whmcs')->table('tblclients')
-        ->select('tblclients.*', \DB::raw(
-          "(SELECT value FROM tblimoptions WHERE rel_id = tblclients.id and type = '{$this->tblImOptionsType}') as contactBitrixId"
-        ))->get();
+      $continueSyncingContact = true;
+      $usersIdDone = [];
+      $counter = 1;
 
-      //Transform clients to bitrix64
-      $contactsBitrix = json_decode(json_encode(ClientsToBitrix24Transformer::collection($clients)));
+      while ($continueSyncingContact) {
+        //Get WHMCS clients with contactBitrixId
+        $clients = \DB::connection('whmcs')->table('tblclients')
+          ->select('tblclients.*', \DB::raw(
+            "(SELECT value FROM tblimoptions WHERE rel_id = tblclients.id and type = '{$this->tblImOptionsType}') as contactBitrixId"
+          ))
+          ->whereNotIn('tblclients.id', $usersIdDone)
+          ->take(50)
+          ->get();
 
-      foreach ($contactsBitrix as $index => $contact) {
-        //Update Contact
-        if (isset($contact->ID) && $contact->ID) {
+        //Save usersIdDone
+        $usersIdDone = array_merge($usersIdDone, $clients->pluck('id')->toArray());
+
+        //End while loop
+        if (!$clients->count()) $continueSyncingContact = false;
+
+        //Transform clients to bitrix64
+        $contactsBitrix = json_decode(json_encode(ClientsToBitrix24Transformer::collection($clients)));
+
+        foreach ($contactsBitrix as $index => $contact) {
           //Update Contact
-          $result = CRest::call('crm.contact.update', ["id" => $contact->ID, "fields" => $contact]);
-          //Log
-          \Log::info("{$this->logTitle} UPDATED (" . ($index + 1) . "/" . count($contactsBitrix) . ')');
-        } else {//Create contact
-          $result = CRest::call('crm.contact.add', ["fields" => $contact]);
-          //Save relation
-          if ($result && isset($result['result']) && $result['result']) {
-            \DB::connection('whmcs')->table('tblimoptions')->insert([
-              'name' => $this->tblImOptionsType,
-              'type' => $this->tblImOptionsType,
-              'rel_id' => $contact->ORIGIN_ID,
-              'value' => $result['result']
-            ]);
+          if (isset($contact->ID) && $contact->ID) {
+            //Update Contact
+            $result = CRest::call('crm.contact.update', ["id" => $contact->ID, "fields" => $contact]);
+            //Log
+            \Log::info("{$this->logTitle} UPDATED (" . $counter . "/" . count($usersIdDone) . ')');
+          } else {//Create contact
+            $result = CRest::call('crm.contact.add', ["fields" => $contact]);
+            //Save relation
+            if ($result && isset($result['result']) && $result['result']) {
+              \DB::connection('whmcs')->table('tblimoptions')->insert([
+                'name' => $this->tblImOptionsType,
+                'type' => $this->tblImOptionsType,
+                'rel_id' => $contact->ORIGIN_ID,
+                'value' => $result['result']
+              ]);
+            }
+            //Log
+            \Log::info("{$this->logTitle} CREATED (" . $counter . "/" . count($usersIdDone) . ')');
           }
-          //Log
-          \Log::info("{$this->logTitle} CREATED (" . ($index + 1) . "/" . count($contactsBitrix) . ')');
-        }
 
-        //Sleep by 0.6 seconds to prevent QUERY_LIMIT_EXCEEDED (2 by second)
-        usleep(600000);
+          $counter += 1;
+
+          //Sleep by 0.6 seconds to prevent QUERY_LIMIT_EXCEEDED (2 by second)
+          usleep(600000);
+        }
       }
     } catch (\Exception $e) {
       \Log::info("{$this->logTitle} | failed" . json_encode($e->getMessage()));
