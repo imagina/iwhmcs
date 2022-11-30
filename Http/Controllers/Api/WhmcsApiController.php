@@ -126,4 +126,44 @@ class WhmcsApiController extends BaseApiController
     //Return response
     return response()->json($response ?? ["data" => "Request successful"], $status ?? 200);
   }
+
+  //Weygo:: Validate deals after get client information
+  public function weygoDealDataReceived(Request $request)
+  {
+    try {
+      //Get attributes
+      $attributes = $request->input('attributes') ?? [];
+      if (!$attributes["email"]) throw new \Exception('Required "email" attributes', 404);
+      //Search contact on bitrix by email
+      $contactsId = collect(CRest::call('crm.contact.list', [
+        "filter" => ["EMAIL" => $attributes["email"]],
+        "select" => ["ID"]
+      ])["result"])->pluck("ID")->toArray();
+      if (!count($contactsId)) throw new \Exception('Contact not found with this email', 404);
+      //Get deals
+      $deals = CRest::call('crm.deal.list', [
+        "filter" => [
+          "CATEGORY_ID" => 6,
+          "STAGE_ID" => "C6:UC_6WQ6ZA", //Requirements
+        ],
+        "select" => ["TITLE", "CONTACT_ID"]
+      ])["result"];
+      foreach ($deals as $deal) {
+        if (in_array($deal["CONTACT_ID"], $contactsId)) {
+          CRest::call('crm.deal.update', [
+            "id" => $deal["ID"],
+            "fields" => ["STAGE_ID" => "C6:NEW"]
+          ]);
+        }
+      }
+      //Response
+      $response = ['data' => 'Updated'];
+    } catch (\Exception $e) {
+      $status = $this->getStatusError($e->getCode());
+      $response = ["errors" => $e->getMessage()];
+    }
+
+    //Return response
+    return response()->json($response ?? ["data" => "Request successful"], $status ?? 200);
+  }
 }

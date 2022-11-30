@@ -39,5 +39,11 @@ $router->group(['prefix' => 'iwhmcs/v1'], function (Router $router) {
     'uses' => 'WhmcsApiController@syncInvoicesToBitrix24',
     'middleware' => ['auth:api']
   ]);
+  //Validate Weygo deals after get client information
+  $router->post('/weygo-deal-data-received', [
+    'as' => 'api.iwhmcs.weygo.deal.data.received',
+    'uses' => 'WhmcsApiController@weygoDealDataReceived',
+    'middleware' => ['auth:api']
+  ]);
 });
 
