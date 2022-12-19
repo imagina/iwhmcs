@@ -16,6 +16,7 @@ class IwhmcsDatabaseSeeder extends Seeder
     {
         Model::unguard();
 
+        $this->call(IwhmcsModuleTableSeeder::class);
         // $this->call("OthersTableSeeder");
     }
 }
