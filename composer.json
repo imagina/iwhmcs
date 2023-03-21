@@ -1,5 +1,5 @@
 {
-    "name": "vendor/iwhmcs",
+    "name": "imagina/iwhmcs",
     "description": "",
     "type": "asgard-module",
     "license": "MIT",
@@ -22,16 +22,14 @@
     "prefer-stable": true,
     "authors": [
         {
-            "name": "Nicolas Widart",
-            "email": "n.widart@gmail.com"
+            "name": "Dev Imagina",
+            "email": "dev@imaginacolombia.com"
         }
     ],
     "extra": {
-        "laravel": {
-            "providers": [],
-            "aliases": {
-
-            }
+        "branch-alias": {
+            "dev-master": "4.0.x-dev",
+            "dev-v8.x": "8.0.x-dev"
         }
     },
     "autoload": {
