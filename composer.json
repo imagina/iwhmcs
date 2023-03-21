@@ -5,12 +5,11 @@
     "license": "MIT",
     "require": {
         "php": "^7.1.3",
-        "composer/installers": "~1.0",
-        "idavoll/core-module": "v8.x-dev"
+        "imagina/core-module": "v8.x-dev"
     },
     "require-dev": {
-        "phpunit/phpunit": "~7.0",
-        "orchestra/testbench": "3.8.*"
+        "phpunit/phpunit": "~4.0",
+        "orchestra/testbench": "~3.2"
     },
     "autoload-dev": {
         "psr-4": {
