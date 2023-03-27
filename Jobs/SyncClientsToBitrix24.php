@@ -48,16 +48,22 @@ class SyncClientsToBitrix24 implements ShouldQueue
   {
     try {
       $continueSyncingContact = true;
-      $usersIdDone = [];
       $counter = 1;
+      //Enable this query only for create new contacts and not update it
+      $usersIdDone = [];
+      $usersOnBitrix = \DB::connection('whmcs')->table('tblimoptions')
+        ->where('tblimoptions.type', '=', \DB::raw("'$this->tblImOptionsType'"))
+        ->get()->pluck('rel_id')->toArray();
 
       while ($continueSyncingContact) {
         //Get WHMCS clients with contactBitrixId
         $clients = \DB::connection('whmcs')->table('tblclients')
-          ->select('tblclients.*', \DB::raw(
-            "(SELECT value FROM tblimoptions WHERE rel_id = tblclients.id and type = '{$this->tblImOptionsType}') as contactBitrixId"
-          ))
-          ->whereNotIn('tblclients.id', $usersIdDone)
+          ->select('tblclients.*', 'tblimoptions.value as contactBitrixId')
+          ->leftJoin('tblimoptions', function ($join) {
+            $join->on('tblimoptions.rel_id', 'tblclients.id');
+            $join->on('tblimoptions.type', '=', \DB::raw("'bitrixContactId'"));
+          })
+          ->whereNotIn('tblclients.id', array_merge($usersOnBitrix, $usersIdDone))
           ->take(50)
           ->get();
 
