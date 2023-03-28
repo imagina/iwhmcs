@@ -35,7 +35,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
     $this->filters = (object)[
       'ignoredClients' => [1, 6],
       'dueRangeDate' => (object)[
-        'from' => date('Y-m-d', strtotime('-15 day', strtotime(now()))),
+        'from' => date('Y-m-d', strtotime('-20 day', strtotime(now()))),
         'to' => date('Y-m-d', strtotime('+5 day', strtotime(now())))
       ],
       'ignoredInvoicesStatus' => ['Terminated', 'Cacelled', 'Fraud']
@@ -50,7 +50,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
    */
   public function handle()
   {
-    //dd(CRest::call('crm.deal.get', ["id" => '94705', "select" => ["STAGE_ID"]]));
+    //dd(CRest::call('crm.deal.get', ["id" => '94749', "select" => ["STAGE_ID"]]));
     //Call the due items
     $this->getDueItems();
     //Get the clients from all due information
@@ -95,10 +95,13 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
         ->select(
           'tblinvoiceitems.*',
           'tblhosting.packageid as productId',
-          'tblhosting.domain',
+          'tblhosting.domain as hostingDomain',
+          'tbldomains.domain as tblDomain',
+          \DB::raw('IF(tblinvoiceitems.type = "Domain", tbldomains.domain, tblhosting.domain) as domain'),
           'tblimoptions.value as bitrixProductId'
         )
         ->leftJoin('tblhosting', 'tblhosting.id', 'tblinvoiceitems.relid')
+        ->leftJoin('tbldomains', 'tbldomains.id', 'tblinvoiceitems.relid')
         ->leftJoin('tblimoptions', function ($join) {
           $join->on('tblimoptions.rel_id', 'tblhosting.packageid');
           $join->on('tblimoptions.type', '=', \DB::raw("'bitrixProductId'"));
@@ -108,8 +111,10 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
       //Group invoices items by invoice and get domain
       foreach ($invoices as $index => $invoice) {
         $invoices[$index]->products = $invoicesItems->where('invoiceid', $invoice->id)->toArray();
-        $invoices[$index]->domain = $invoicesItems->where('invoiceid', $invoice->id)
-          ->whereNotNull('domain')->first()->domain ?? null;
+        //Get the domain. Search invoiceItem type domain or something else with domain
+        $domain = $invoicesItems->where('invoiceid', $invoice->id)->where('type', 'Domain')->first();
+        $domain = $domain ?? $invoicesItems->where('invoiceid', $invoice->id)->whereNotNull('domain')->first();
+        $invoices[$index]->domain = $domain->domain ?? null;
       }
       //Set the due item
       $this->dueItems = $invoices;
@@ -189,11 +194,10 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
       $dueDealData = [
         "ID" => $dueDealBitrix->value ?? null,
         "TITLE" => "{$deal->status}-{$deal->domain}",
-        "STAGE_ID" => "C17:NEW",//Pagos pendientes - WHMCS
-        "CATEGORY_ID" => "17",//Pagos pendientes - WHMCS
         "CONTACT_ID" => $client->bitrixContactId,
         "OPENED" => "Y",
         "CURRENCY_ID" => "COP",
+        "OPPORTUNITY" => $deal->amount,
         "UF_CRM_1679092607" => $deal->duedate,//DueDate
         //"UF_CRM_1679524104" => $billingCyle[$deal->billingcycle],//billing cycle
         "UF_CRM_1679524884" => $deal->domain,//Domain
@@ -206,7 +210,10 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
         //Set response
         $dealId = $dueDealData["ID"];
       } else {//Create Deal
-        $result = CRest::call('crm.deal.add', ["fields" => $dueDealData]);
+        $result = CRest::call('crm.deal.add', ["fields" => array_merge($dueDealData, [
+          "STAGE_ID" => "C17:NEW",//Pagos pendientes - WHMCS
+          "CATEGORY_ID" => "17",//Pagos pendientes - WHMCS
+        ])]);
         //Save relation
         \DB::connection('whmcs')->table('tblimoptions')->insert([
           'name' => $this->tblOptType,
@@ -235,6 +242,8 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
         }
         //Set products to deal
         CRest::call('crm.deal.productrows.set', ["id" => $dealId, "rows" => $dealProducts]);
+        //update the opportunity of the deal
+        CRest::call('crm.deal.update', ["id" => $dealId, "fields" => $dueDealData]);
       }
 
       //Sleep by 0.6 seconds to prevent QUERY_LIMIT_EXCEEDED (2 by second)
