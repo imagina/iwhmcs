@@ -21,7 +21,7 @@ class ScheduleServiceProvider extends ServiceProvider
       $schedule->call(function () {
         \Modules\Iwhmcs\Jobs\syncDueInvoicesItemsToBitrix::dispatch();
         \Log::info("Iwhmcs::scheduled syncDueInvoicesItemsToBitrix");
-      })->dailyAt('18:00');
+      })->dailyAt('18:15');
     });
   }
 }
