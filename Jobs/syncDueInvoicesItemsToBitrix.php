@@ -15,6 +15,8 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
 {
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+  public $timeout = 1200;
+
   protected $logTitle;
   protected $filters;
   protected $dueItems;
