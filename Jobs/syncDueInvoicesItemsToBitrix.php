@@ -15,7 +15,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
 {
   use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-  public $timeout = 3600;
+  public $timeout = 5400;
 
   protected $logTitle;
   protected $filters;
@@ -178,6 +178,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
       $billingStatus = [
         'Paid' => '961',
         'Unpaid' => '963',
+        'Cancelled' => '975',
         'default' => '963'
       ];
 
