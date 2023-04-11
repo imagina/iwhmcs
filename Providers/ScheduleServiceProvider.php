@@ -16,12 +16,12 @@ class ScheduleServiceProvider extends ServiceProvider
       $schedule->call(function () {
         \Modules\Iwhmcs\Jobs\SyncClientsToBitrix24::dispatch();
         \Log::info("Iwhmcs::scheduled SyncClientsToBitrix24");
-      })->timezone('America/Bogota')->dailyAt('17:00');
+      })->timezone('America/Bogota')->dailyAt('07:00');
       //sync the due deals
       $schedule->call(function () {
         \Modules\Iwhmcs\Jobs\syncDueInvoicesItemsToBitrix::dispatch();
         \Log::info("Iwhmcs::scheduled syncDueInvoicesItemsToBitrix");
-      })->timezone('America/Bogota')->dailyAt('18:00');
+      })->timezone('America/Bogota')->dailyAt('08:00');
     });
   }
 }
