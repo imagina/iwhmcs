@@ -38,7 +38,8 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
         'from' => date('Y-m-d', strtotime('-20 day', strtotime(now()))),
         'to' => date('Y-m-d', strtotime('+5 day', strtotime(now())))
       ],
-      'ignoredInvoicesStatus' => ['Terminated', 'Cacelled', 'Fraud']
+      'ignoredInvoicesStatus' => ['Terminated', 'Cacelled', 'Fraud'],
+      'allowedInvoicesItemTypes' => ['Hosting', 'Domain']
     ];
     $this->tblOptType = 'bitrixDueDealInvoice';
   }
@@ -106,6 +107,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
           $join->on('tblimoptions.rel_id', 'tblhosting.packageid');
           $join->on('tblimoptions.type', '=', \DB::raw("'bitrixProductId'"));
         })
+        ->whereIn('tblinvoiceitems.type', $this->filters->allowedInvoicesItemTypes)
         ->whereIn('invoiceid', array_column($invoices, 'id'))
         ->get();
       //Group invoices items by invoice and get domain
@@ -116,8 +118,10 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
         $domain = $domain ?? $invoicesItems->where('invoiceid', $invoice->id)->whereNotNull('domain')->first();
         $invoices[$index]->domain = $domain->domain ?? null;
       }
-      //Set the due item
-      $this->dueItems = $invoices;
+      //Set the due item and filter only the onvoices with items
+      $this->dueItems = array_filter($invoices, function ($item) {
+        return count($item->products);
+      });
     } catch (\Exception $e) {
       \Log::info("{$this->logTitle}::getDueHosting Failed " . json_encode($e->getMessage()));
     }
