@@ -51,6 +51,7 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
    */
   public function handle()
   {
+    //$this->removeDealsFromBitrix();
     //dd(CRest::call('crm.deal.get', ["id" => '94749', "select" => ["STAGE_ID"]]));
     //Call the due items
     $this->getDueItems();
@@ -258,6 +259,26 @@ class syncDueInvoicesItemsToBitrix implements ShouldQueue
     } catch (\Exception $e) {
       dd($e->getFile(), $e->getLine());
       \Log::info("{$this->logTitle}::syncDueDeal Failed " . json_encode($e->getMessage()));
+    }
+  }
+
+  private function removeDealsFromBitrix()
+  {
+    //Get the reference
+    $data = \DB::connection('whmcs')->table('tblimoptions')
+      ->where('type', $this->tblOptType)
+      //->take(500)
+      ->get();
+
+    //Remove deals
+    foreach ($data as $index => $record) {
+      $response = CRest::call('crm.deal.delete', ["id" => $record->value]);
+      if (isset($response["result"]) && $response["result"]) {
+        \DB::connection('whmcs')->table('tblimoptions')->where('id', $record->id)->delete();
+      }
+      \Log::info("{$this->logTitle}::removeDealsFromBitrix Success " . ($index + 1) . "/" . count($data) . " ---> " . $record->id . " --> " . json_encode($response));
+      //Sleep by 0.6 seconds to prevent QUERY_LIMIT_EXCEEDED (2 by second)
+      usleep(300000);
     }
   }
 }
